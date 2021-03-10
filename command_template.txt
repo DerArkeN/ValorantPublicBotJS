@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'delete',
-    description: 'delete arg messages',
+    name: '',
+    description: '',
     guildOnly: true,
     args: true,
     usage: '',
