@@ -1,6 +1,5 @@
 const sql = require('./sql.js');
 const cfg = require('../config.json');
-const lft = require('../commands/server/lft.js');
 const discord = require('discord.js');
 
 var valid_roles = ['Iron 1', 'Iron 2', 'Iron 3',
@@ -105,6 +104,11 @@ exports.getChannel = function(executorORmessage, client) {
 	const data = lftData[executorORmessage.id];
 	if(!data) return;
 	return client.channels.cache.get(data[2]);
+};
+
+exports.channelExists = function(channel) {
+	if(channel.id in lftData) return true;
+	return false;
 };
 
 exports.setLFT = async function(executor, client) {
@@ -215,28 +219,27 @@ exports.rank_allowed = function(member, channel) {
 	const memberRank = this.getRank(member).name;
 	const channelMembers = channel.members;
     
-	function all(iterable){
-		for(var index = 0; index < iterable.length; index++) {
-			if(!iterable) return false;
-		}
-		return true;
-	}
+	const all = (channelMember) => {
+		return ranks_dict[this.getRank(channelMember).name].includes(memberRank);
+	};
 
-	if(all(channelMembers.forEach(channelMember => {ranks_dict[this.getRank(channelMember).name].includes(memberRank);}))) return true;
-	return false;
+	for(const [memberID, channelMember] of channelMembers) {
+		let memberList = [];
+		memberList.push(channelMember);
+
+		return memberList.every(all);
+	}
 };
 
 exports.leaveChannel = async function(member, oldState, client) {
 	if(member.nickname) {
-		if(this.getChannel(oldState.channel, client)) {
-			if(this.getExecutor(oldState.channel, client) == member) {
+		if(this.channelExists(oldState.channel)) {
+			if(!(this.getExecutor(oldState.channel, client) == member)) {
 				const lftAuthor = this.getExecutor(oldState.channel, client);
 				const message = this.getMessage(oldState.channel, client);
 				
 				message.edit(await this.createEmbed(lftAuthor));
-			}
-		}else {
-			if(this.getExecutor(oldState.channel, client) == member) {
+			}else{
 				this.setCasual(oldState.channel, client);
 			}
 		}
@@ -244,11 +247,11 @@ exports.leaveChannel = async function(member, oldState, client) {
 };
 
 exports.joinChannel = async function(member, newState, client) {
-	if(this.getChannel(newState.channel, client)) {
+	if(this.channelExists(newState.channel)) {
 		if(!(this.rank_allowed(member, newState.channel))) {
 			member.voice.setChannel(null);
 			this.getSupportChannel(client).send(`${member}, you are not able to play with users in this channel since the rank difference is too high.`).then(msg => {
-				msg.delete(10000);
+				msg.delete({timeout: 10000});
 			});
 		}else{
 			const message = this.getMessage(member.voice.channel, client);

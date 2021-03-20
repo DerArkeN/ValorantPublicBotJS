@@ -34,7 +34,7 @@ module.exports = {
 				if(newState.channel.parent == createChannelVoice.parent) {
 					if(newState.channel != createChannelVoice) {
 						if(newState.channel.members >= 5) {
-							if(functions.getChannel(newState.channel)) {
+							if(functions.channelExists(newState.channel)) {
 								functions.setClosed(newState.channel, client);
 							}
 						}

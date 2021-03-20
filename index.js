@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const discord = require('discord.js');
-const {API, Regions, Locales, Queue} = require('node-valorant-api');
+const {API, Regions} = require('node-valorant-api');
 
 const TOKEN = process.env.TOKEN;
 const KEY = process.env.KEY;
@@ -16,9 +16,9 @@ const eventFiles = fs.readdirSync('./events');
 for(const file of eventFiles) {
 	const event = require(`./events/${file}`);
 	if(event.once){
-		client.once(event.name, (...args) => event.execute(...args, client));
+		client.once(event.name, (...args) => event.execute(...args, client, valorant));
 	}else {
-		client.on(event.name, (...args) => event.execute(...args, client));
+		client.on(event.name, (...args) => event.execute(...args, client, valorant));
 	}
 }
 
